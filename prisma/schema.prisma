@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  EWALLET
+  QRIS
+}
+
+enum PaymentType {
+  INCOME
+  OUTCOME
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  fullname String
+  email    String @unique
+  major_id Int?
+  major    Major? @relation(fields: [major_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  deleted_at DateTime?
+  Payments   Payments[]
+
+  @@index([major_id])
+  @@map("users")
+}
+
+model Major {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  code        String  @unique
+  description String?
+  User        User[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@map("majors")
+}
+
+model Payments {
+  id          Int           @id @default(autoincrement())
+  amount      Decimal       @db.Decimal(15, 2)
+  description String?
+  user_id     Int
+  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  method      PaymentMethod
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([user_id])
+  @@map("payments")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique // session ID
+  data      String // serialized session data (JSON)
+  expiresAt DateTime
+
+  @@index([expiresAt], name: "idx_session_expiresAt")
+  @@map("sessions")
+}
