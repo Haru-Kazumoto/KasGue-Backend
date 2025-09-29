@@ -1,28 +1,34 @@
 import * as majorRepository from "../repositories/majors.repository.js";
 import * as userRepository from "../repositories/user.repository.js";
-import { registerUserSchema } from "../schema/register.schema.js";
 import * as passwordUtils from "../utils/password.utils.js"
 
 export default async function register(params) {
-    const data = registerUserSchema.parse(params);
+    const { username, password, fullname, email, major_id } = params || {}; // type save if there is not body retrieved
+    if (!username || !password || !fullname || !email || !major_id) {
+        return res.status(400).json({
+            message: "Field is required, [EMAIL, PASSWORD, USERNAME, FULLNAME]",
+            error: "Bad Request",
+            code: 401
+        });
+    }
 
     try {
-        const password_hash = passwordUtils.hashPassword(data.password);
+        const password_hash = passwordUtils.hashPassword(password);
 
-        const major = majorRepository.getMajorFromId(data.major_id);
+        const major = majorRepository.getMajorFromId(major_id);
 
         if (!major) return res.status(404).json({
-            message: "Major tidak ditemukan, " + data.major_id,
+            message: "Major tidak ditemukan, " + major_id,
             error: "Not Found",
             code: 404
         });
 
         const user = userRepository.createUserConnectMajor({
-            username: data.username,
-            email: data.email,
+            username,
+            email,
             password_hash,
-            fullname: data.fullname
-        }, data.major_id);
+            fullname
+        }, major_id);
 
         return res.status(201).json(user);
     } catch (err) {
