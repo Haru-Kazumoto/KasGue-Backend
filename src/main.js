@@ -29,7 +29,7 @@ app.use(helmet(
     }
 ));
 app.use(cors({
-    origin: ["https://haru-kazumoto.github.io/KasGue/", "http://localhost:5500"],
+    origin: ["https://haru-kazumoto.github.io/KasGue/", "http://localhost:5500", "https://haru-kazumoto.github.io"],
     credentials: true
 }));
 
