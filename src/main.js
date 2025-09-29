@@ -22,9 +22,14 @@ const pool = new Pool({
 })
 
 app.use(express.json());
-app.use(helmet());
+app.use(helmet(
+    {
+        crossOriginResourcePolicy: false,
+        contentSecurityPolicy: false
+    }
+));
 app.use(cors({
-    origin: ["https://kasgue-backend-production.up.railway.app/","http://localhost:5500"],
+    origin: ["https://haru-kazumoto.github.io/KasGue/", "http://localhost:5500"],
     credentials: true
 }));
 
