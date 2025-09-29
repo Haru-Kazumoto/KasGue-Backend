@@ -1,16 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Router } from "express";
 import ensureAuthenticated from "../middlewares/ensure-auth.middleware.js";
 import passport from "passport";
-import * as majorRepository from "../repositories/majors.repository.js";
-import * as userRepository from "../repositories/user.repository.js";
-import * as passwordUtils from "../utils/password.utils.js"
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.post("/auth/register", (req, res, next) => {
+router.post("/auth/register",async (req, res, next) => {
     const { username, password, fullname, email, major_id } = req.body || {}; // type save if there is not body retrieved
+
     if (!username || !password || !fullname || !email || !major_id) {
         return res.status(400).json({
             message: "Field is required, [EMAIL, PASSWORD, USERNAME, FULLNAME]",
@@ -20,9 +19,12 @@ router.post("/auth/register", (req, res, next) => {
     }
 
     try {
-        const password_hash = passwordUtils.hashPassword(password);
+        const password_hash = await bcrypt.hash(password, 12);
 
-        const major = majorRepository.getMajorFromId(major_id);
+        const major = await prisma.major.findUnique({
+            where: { id: major_id },
+            select: { id: true, code: true }
+        });
 
         if (!major) return res.status(404).json({
             message: "Major tidak ditemukan, " + major_id,
@@ -30,12 +32,19 @@ router.post("/auth/register", (req, res, next) => {
             code: 404
         });
 
-        const user = userRepository.createUserConnectMajor({
-            username,
-            email,
-            password_hash,
-            fullname
-        }, major_id);
+        const user = await prisma.user.create({
+            data: {
+                username,
+                password: password_hash,
+                fullname,
+                email,
+                major: {
+                    connect: {
+                        id: Number(major.id)
+                    }
+                }
+            }
+        });
 
         return res.status(201).json(user);
     } catch (err) {
