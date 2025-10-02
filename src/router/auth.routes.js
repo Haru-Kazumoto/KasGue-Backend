@@ -76,7 +76,6 @@ router.post("/auth/register",async (req, res, next) => {
         });
     }
 });
-
 // Login (session dibuat otomatis)
 router.post("/auth/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
@@ -97,7 +96,7 @@ router.get("/auth/me", ensureAuthenticated, (req, res) => {
 });
 
 // Logout (hapus session)
-router.post("/auth/logout", ensureAuthenticated, (req, res, next) => {
+router.post("/auth/logout", (req, res, next) => {
     req.logout(err => {
         if (err) return next(err);
         req.session.destroy(() => {

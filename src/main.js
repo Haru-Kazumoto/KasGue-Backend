@@ -2,7 +2,6 @@ import express from "express";
 import helmet from "helmet";
 import session from "express-session";
 import passport from "passport";
-import bcrypt from "bcrypt";
 import cors from "cors";
 import pkg from "pg";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
@@ -10,6 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import { configurePassport } from "./passport.js";
 import ensureAuthenticated from "./middlewares/ensure-auth.middleware.js";
 import authRoutes from "./router/auth.routes.js";
+import paymentsRoutes from "./router/payments.routes.js";
 const { Pool } = pkg;
 
 const prisma = new PrismaClient();
@@ -29,7 +29,12 @@ app.use(helmet(
     }
 ));
 app.use(cors({
-    origin: ["https://haru-kazumoto.github.io/KasGue/", "http://localhost:5500", "https://haru-kazumoto.github.io"],
+    origin: [
+        "http://127.0.0.1:5500",
+        "http://localhost:5500", 
+        "https://haru-kazumoto.github.io/KasGue/", 
+        "https://haru-kazumoto.github.io"
+    ],
     credentials: true
 }));
 
@@ -48,7 +53,8 @@ app.use(
             httpOnly: true,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
-            maxAge: 1000 * 60 * 60 * 2 //2 jam
+            maxAge: 1000 * 60 * 60 * 2, //2 jam
+            path: '/'
         }
     })
 )
@@ -58,7 +64,10 @@ app.use(passport.session());
 configurePassport(passport);
 
 // ROUTES
-app.use("/api/v1", authRoutes);
+app.use("/api/v1", [
+    authRoutes,
+    paymentsRoutes
+]);
 
 // Contoh endpoint proteksi
 app.get("/orders", ensureAuthenticated, async (req, res) => {

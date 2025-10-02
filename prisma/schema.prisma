@@ -59,12 +59,15 @@ model Major {
 }
 
 model Payments {
-  id          Int           @id @default(autoincrement())
-  amount      Decimal       @db.Decimal(15, 2)
-  description String?
-  user_id     Int
-  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  method      PaymentMethod
+  id              Int           @id @default(autoincrement())
+  amount          Decimal       @db.Decimal(15, 2)
+  description     String?
+  user_id         Int
+  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  method          PaymentMethod
+  type            PaymentType
+  payment_segment String?
+  payer_name      String
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
